@@ -3,13 +3,23 @@ from pydantic import BaseModel
 import pickle
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
+import os
+from http.server import BaseHTTPRequestHandler
+import json
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type','application/json')
+        self.end_headers()
+        response = {"message": "Hello from Python on Vercel!"}
+        self.wfile.write(json.dumps(response).encode())
 
-# Load model
-with open("expsmooth_model.pkl", "rb") as f:
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(BASE_DIR, "expsmooth_model.pkl")
+
+with open(model_path, "rb") as f:
     model = pickle.load(f)
 
 app = FastAPI(
@@ -18,9 +28,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-@app.get("/")
-def read_root():
-    return {"message": "Selamat datang di API Prediksi Pemakaian Solar!"}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # ganti "*" dengan domain frontend kalau sudah produksi
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class InputData(BaseModel):
     steps: int  # jumlah hari ke depan
