@@ -18,6 +18,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
+@app.get("/")
+def read_root():
+    return {"message": "Selamat datang di API Prediksi Pemakaian Solar!"}
+
 class InputData(BaseModel):
     steps: int  # jumlah hari ke depan
 
